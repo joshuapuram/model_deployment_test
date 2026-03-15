@@ -1,0 +1,7 @@
+os
+json
+python-dotenv
+ipython
+scraper
+openai
+streamlit
