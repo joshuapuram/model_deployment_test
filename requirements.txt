@@ -3,3 +3,6 @@ openai
 python-dotenv
 ipython
 scraper
+beautifulsoup4
+scrapy
+requests 
