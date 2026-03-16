@@ -3,7 +3,7 @@ import os
 import json
 from dotenv import load_dotenv
 # from IPython.display import Markdown, display, update_display
-from scraper import fetch_website_links, fetch_website_contents
+# from scraper import fetch_website_links, fetch_website_contents
 from openai import OpenAI
 
 # Initialize and constants
@@ -19,6 +19,13 @@ else:
 MODEL = 'gpt-5-nano'
 openai = OpenAI()
 
+
+async def fetch_website_links(url):
+    async with AsyncWebCrawler() as crawler:
+        # arun() executes JS and returns a result object
+        result = await crawler.arun(url=url)
+        # Access discovered links directly
+        return result.links.get("internal", []) + result.links.get("external", [])
 
 
 # links = fetch_website_links("https://edwarddonner.com")
@@ -47,7 +54,7 @@ Do not include Terms of Service, Privacy, email links.
 Links (some might be relative links):
 
 """
-    links = fetch_website_links(url)
+    links = asyncio.run(fetch_website_links(url))
     user_prompt += "\n".join(links)
     return user_prompt
    
@@ -70,7 +77,7 @@ def select_relevant_links(url):
 
 
 def fetch_page_and_all_relevant_links(url):
-    contents = fetch_website_contents(url)
+    contents = asyncio.run(fetch_website_links(url))
     relevant_links = select_relevant_links(url)
     result = f"## Landing Page:\n\n{contents}\n## Relevant Links:\n"
     for link in relevant_links['links']:
