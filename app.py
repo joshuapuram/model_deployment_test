@@ -10,7 +10,9 @@ from openai import OpenAI
 # Initialize and constants
 
 load_dotenv(override=True)
-api_key = os.getenv('OPENAI_API_KEY')
+# api_key = os.getenv('OPENAI_API_KEY')
+
+api_key=st.secrets["OPENAI_API_KEY"]
 
 if api_key and api_key.startswith('sk-proj-') and len(api_key)>10:
     print("API key looks good so far")
