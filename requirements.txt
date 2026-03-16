@@ -1,6 +1,3 @@
-json
-python-dotenv
-ipython
-scraper
-openai
 streamlit
+openai
+python-dotenv
