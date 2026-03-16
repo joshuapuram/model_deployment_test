@@ -3,7 +3,7 @@ import os
 import json
 from dotenv import load_dotenv
 # from IPython.display import Markdown, display, update_display
-# from scraper import fetch_website_links, fetch_website_contents
+from scraper import fetch_website_links, fetch_website_contents
 from openai import OpenAI
 
 # Initialize and constants
@@ -17,140 +17,69 @@ else:
     print("There might be a problem with your API key? Please visit the troubleshooting notebook!")
     
 MODEL = 'gpt-5-nano'
+# openai = OpenAI()
+
 openai = OpenAI()
 
+response = openai.chat.completions.create(model="gpt-5-nano", messages=messages)
+response.choices[0].message.content
 
-async def fetch_website_links(url):
-    async with AsyncWebCrawler() as crawler:
-        # arun() executes JS and returns a result object
-        result = await crawler.arun(url=url)
-        # Access discovered links directly
-        return result.links.get("internal", []) + result.links.get("external", [])
+# Define our system prompt - you can experiment with this later, changing the last sentence to 'Respond in markdown in Spanish."
 
-
-# links = fetch_website_links("https://edwarddonner.com")
-
-link_system_prompt = """
-You are provided with a list of links found on a webpage.
-You are able to decide which of the links would be most relevant to include in a brochure about the company,
-such as links to an About page, or a Company page, or Careers/Jobs pages.
-You should respond in JSON as in this example:
-
-{
-    "links": [
-        {"type": "about page", "url": "https://full.url/goes/here/about"},
-        {"type": "careers page", "url": "https://another.full.url/careers"}
-    ]
-}
+system_prompt = """
+You are a snarky assistant that analyzes the contents of a website,
+and provides a short, snarky, humorous summary, ignoring text that might be navigation related.
+Respond in markdown. Do not wrap the markdown in a code block - respond just with the markdown.
 """
 
-def get_links_user_prompt(url):
-    user_prompt = f"""
-Here is the list of links on the website {url} -
-Please decide which of these are relevant web links for a brochure about the company, 
-respond with the full https URL in JSON format.
-Do not include Terms of Service, Privacy, email links.
+# Define our user prompt
 
-Links (some might be relative links):
+user_prompt_prefix = """
+Here are the contents of a website.
+Provide a short summary of this website.
+If it includes news or announcements, then summarize these too.
 
 """
-    links = asyncio.run(fetch_website_links(url))
-    user_prompt += "\n".join(links)
-    return user_prompt
-   
 
+# def messages_for(website):
+#     return [
+#         {"role": "system", "content": system_prompt},
+#         {"role": "user", "content": user_prompt_prefix + website}
+#     ]
 
-def select_relevant_links(url):
-    print(f"Selecting relevant links for {url} by calling {MODEL}")
+# And now: call the OpenAI API. You will get very familiar with this!
+
+def summarize(url):
+    website = fetch_website_contents(url)
     response = openai.chat.completions.create(
-        model=MODEL,
+        model = "gpt-4.1-mini",
+        # messages = messages_for(website),
+
         messages=[
-            {"role": "system", "content": link_system_prompt},
-            {"role": "user", "content": get_links_user_prompt(url)}
-        ],
-        response_format={"type": "json_object"}
-    )
-    result = response.choices[0].message.content
-    links = json.loads(result)
-    print(f"Found {len(links['links'])} relevant links")
-    return links
-
-
-def fetch_page_and_all_relevant_links(url):
-    contents = asyncio.run(fetch_website_links(url))
-    relevant_links = select_relevant_links(url)
-    result = f"## Landing Page:\n\n{contents}\n## Relevant Links:\n"
-    for link in relevant_links['links']:
-        result += f"\n\n### Link: {link['type']}\n"
-        result += fetch_website_contents(link["url"])
-    return result
-
-
-# brochure_system_prompt = """
-# You are an assistant that analyzes the contents of several relevant pages from a company website
-# and creates a short brochure about the company for prospective customers, investors and recruits.
-# Respond in markdown without code blocks.
-# Include details of company culture, customers and careers/jobs if you have the information.
-# """
-
-# Or uncomment the lines below for a more humorous brochure - this demonstrates how easy it is to incorporate 'tone':
-
-brochure_system_prompt = """
-You are an assistant that analyzes the contents of several relevant pages from a company website
-and creates a short, humorous, entertaining, witty brochure about the company for prospective customers, investors and recruits.
-Respond in markdown without code blocks.
-Include details of company culture, customers and careers/jobs if you have the information.
-"""
-
-
-def get_brochure_user_prompt(company_name, url):
-    user_prompt = f"""
-    You are looking at a company called: {company_name}
-    Here are the contents of its landing page and other relevant pages;
-    use this information to build a short brochure of the company in markdown without code blocks.\n\n
-    """
-    user_prompt += fetch_page_and_all_relevant_links(url)
-    user_prompt = user_prompt[:5_000] # Truncate if more than 5,000 characters
-    return user_prompt
-
-def create_brochure(company_name, url):
-    response = openai.chat.completions.create(
-        model="gpt-4.1-mini",
-        messages=[
-            {"role": "system", "content": brochure_system_prompt},
-            {"role": "user", "content": get_brochure_user_prompt(company_name, url)}
-        ],
-    )
-    result = response.choices[0].message.content
-    # display(Markdown(result))
-    st.markdown(result)
-
-def stream_brochure(company_name, url):
-    stream = openai.chat.completions.create(
-        model="gpt-4.1-mini",
-        messages=[
-            {"role": "system", "content": brochure_system_prompt},
-            {"role": "user", "content": get_brochure_user_prompt(company_name, url)}
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": messages_for(url)}
           ],
         stream=True
-    )    
-    # Streamlit handles the iteration and Markdown rendering automatically
+
+        
+    )
+    return response.choices[0].message.content
     st.write_stream(stream)
 
 
 # Streamlit UI
-st.title("Company AI Brochure Generator")
+st.title("Website Summarizer")
 
 # Create input boxes for your function parameters
-name = st.text_input("Enter Name of Company")
-link = st.text_input("Enter link to company page")
+# name = st.text_input("Enter Name of Company")
+link = st.text_input("Enter link here")
 
 # Add a button to trigger the function
 if st.button("Run Model"):
-    if name and link:
+    if link:
         with st.spinner("Processing..."):
             # Call your function with the user inputs
-            result = stream_brochure(name, link)
+            result = summarize(url)
             st.success(result)
     else:
-        st.warning("Please provide both a name and a link.")
+        st.warning("Please provide a link.")
