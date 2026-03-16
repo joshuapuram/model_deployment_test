@@ -3,8 +3,17 @@ import os
 import json
 from dotenv import load_dotenv
 from IPython.display import Markdown, display, update_display
-from scraper import fetch_website_links, fetch_website_contents
+# from scraper import fetch_website_links, fetch_website_contents
 from openai import OpenAI
+
+from bs4 import BeautifulSoup
+import requests
+
+def fetch_links(url):
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    return [a['href'] for a in soup.find_all('a', href=True)]
+
 
 # Initialize and constants
 
@@ -21,7 +30,7 @@ openai = OpenAI()
 
 
 
-links = fetch_website_links("https://edwarddonner.com")
+# links = fetch_website_links("https://edwarddonner.com")
 
 link_system_prompt = """
 You are provided with a list of links found on a webpage.
@@ -47,7 +56,7 @@ Do not include Terms of Service, Privacy, email links.
 Links (some might be relative links):
 
 """
-    links = fetch_website_links(url)
+    links = fetch_links(url)
     user_prompt += "\n".join(links)
     return user_prompt
    
