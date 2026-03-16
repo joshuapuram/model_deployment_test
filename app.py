@@ -145,6 +145,10 @@ def stream_brochure(company_name, url):
     )    
     response = ""
     display_handle = display(Markdown(""), display_id=True)
+    
+    if display_handle is not None:
+        display_handle.update(new_content)
+    
     for chunk in stream:
         response += chunk.choices[0].delta.content or ''
         update_display(Markdown(response), display_id=display_handle.display_id)
