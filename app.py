@@ -115,7 +115,8 @@ def create_brochure(company_name, url):
         ],
     )
     result = response.choices[0].message.content
-    display(Markdown(result))
+    # display(Markdown(result))
+    st.markdown(result)
 
 def stream_brochure(company_name, url):
     stream = openai.chat.completions.create(
@@ -126,11 +127,8 @@ def stream_brochure(company_name, url):
           ],
         stream=True
     )    
-    response = ""
-    display_handle = display(Markdown(""), display_id=True)
-    for chunk in stream:
-        response += chunk.choices[0].delta.content or ''
-        update_display(Markdown(response), display_id=display_handle.display_id)
+    # Streamlit handles the iteration and Markdown rendering automatically
+    st.write_stream(stream)
 
 
 # Streamlit UI
