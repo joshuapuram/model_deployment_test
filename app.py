@@ -2,7 +2,7 @@ import streamlit as st
 import os
 import json
 from dotenv import load_dotenv
-from IPython.display import Markdown, display, update_display
+# from IPython.display import Markdown, display, update_display
 from scraper.utils import fetch_website_links, fetch_website_contents
 from openai import OpenAI
 
