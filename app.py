@@ -4,7 +4,7 @@ import json
 from dotenv import load_dotenv
 # from IPython.display import Markdown, display, update_display
 # from scraper import fetch_website_links
-from scraper import fetch_website_contents
+# from scraper import fetch_website_contents
 from openai import OpenAI
 
 # Initialize and constants
@@ -28,7 +28,7 @@ response.choices[0].message.content
 # Define our system prompt - you can experiment with this later, changing the last sentence to 'Respond in markdown in Spanish."
 
 system_prompt = """
-You are a snarky assistant that analyzes the contents of a website,
+You are a snarky assistant that replies back to the user
 and provides a short, snarky, humorous summary, ignoring text that might be navigation related.
 Respond in markdown. Do not wrap the markdown in a code block - respond just with the markdown.
 """
@@ -36,9 +36,9 @@ Respond in markdown. Do not wrap the markdown in a code block - respond just wit
 # Define our user prompt
 
 user_prompt_prefix = """
-Here are the contents of a website.
-Provide a short summary of this website.
-If it includes news or announcements, then summarize these too.
+Here are the contents of the user input.
+Provide a short, funny, snarky reply to it.
+If it includes questions, then answer them too.
 
 """
 
@@ -50,15 +50,15 @@ If it includes news or announcements, then summarize these too.
 
 # And now: call the OpenAI API. You will get very familiar with this!
 
-def summarize(url):
-    website = fetch_website_contents(url)
+def summarize(input):
+    # website = fetch_website_contents(url)
     response = openai.chat.completions.create(
         model = "gpt-4.1-mini",
         # messages = messages_for(website),
 
         messages=[
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": messages_for(url)}
+            {"role": "user", "content": user_prompt_prefix + input}
           ],
         stream=True
 
@@ -69,11 +69,11 @@ def summarize(url):
 
 
 # Streamlit UI
-st.title("Website Summarizer")
+st.title("Funny Assistant")
 
 # Create input boxes for your function parameters
 # name = st.text_input("Enter Name of Company")
-link = st.text_input("Enter link here")
+link = st.text_input("Enter input here")
 
 # Add a button to trigger the function
 if st.button("Run Model"):
