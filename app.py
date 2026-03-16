@@ -60,7 +60,7 @@ def summarize(input):
 
         messages=[
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt_prefix + input}
+            {"role": "user", "content": user_prompt_prefix + str(input)}
           ],
         stream=True
 
