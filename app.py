@@ -3,26 +3,9 @@ import os
 import json
 from dotenv import load_dotenv
 from IPython.display import Markdown, display, update_display
-# from scraper import fetch_website_contents
+from scraper import fetch_website_links, fetch_website_contents
 from openai import OpenAI
 
-from bs4 import BeautifulSoup
-import requests
-
-def fetch_links(url):
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, 'html.parser')
-    return [a['href'] for a in soup.find_all('a', href=True)]
-
-def fetch_website_contents(url):
-    # Standard way to get website data
-    response = requests.get(url, timeout=10)
-    response.raise_for_status()
-    soup = BeautifulSoup(response.content, "html.parser")
-    
-    # Return the text or title as needed
-    return soup.get_text()
-    
 # Initialize and constants
 
 load_dotenv(override=True)
@@ -64,7 +47,7 @@ Do not include Terms of Service, Privacy, email links.
 Links (some might be relative links):
 
 """
-    links = fetch_links(url)
+    links = fetch_website_links(url)
     user_prompt += "\n".join(links)
     return user_prompt
    
@@ -145,10 +128,6 @@ def stream_brochure(company_name, url):
     )    
     response = ""
     display_handle = display(Markdown(""), display_id=True)
-    
-    if display_handle is not None:
-        display_handle.update(new_content)
-    
     for chunk in stream:
         response += chunk.choices[0].delta.content or ''
         update_display(Markdown(response), display_id=display_handle.display_id)
