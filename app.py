@@ -82,7 +82,7 @@ if st.button("Run Model"):
     if link:
         with st.spinner("Processing..."):
             # Call your function with the user inputs
-            result = summarize(url)
+            result = summarize(input)
             st.success(result)
     else:
         st.warning("Please provide a link.")
