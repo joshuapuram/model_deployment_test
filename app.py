@@ -3,7 +3,7 @@ import os
 import json
 from dotenv import load_dotenv
 from IPython.display import Markdown, display, update_display
-from scraper import fetch_website_contents
+# from scraper import fetch_website_contents
 from openai import OpenAI
 
 from bs4 import BeautifulSoup
@@ -14,7 +14,15 @@ def fetch_links(url):
     soup = BeautifulSoup(response.text, 'html.parser')
     return [a['href'] for a in soup.find_all('a', href=True)]
 
-
+def fetch_website_contents(url):
+    # Standard way to get website data
+    response = requests.get(url, timeout=10)
+    response.raise_for_status()
+    soup = BeautifulSoup(response.content, "html.parser")
+    
+    # Return the text or title as needed
+    return soup.get_text()
+    
 # Initialize and constants
 
 load_dotenv(override=True)
