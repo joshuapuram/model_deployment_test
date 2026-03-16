@@ -24,8 +24,8 @@ MODEL = 'gpt-5-nano'
 
 openai = OpenAI()
 
-response = openai.chat.completions.create(model="gpt-5-nano", messages=messages)
-response.choices[0].message.content
+# response = openai.chat.completions.create(model="gpt-5-nano", messages=messages)
+# response.choices[0].message.content
 
 # Define our system prompt - you can experiment with this later, changing the last sentence to 'Respond in markdown in Spanish."
 
