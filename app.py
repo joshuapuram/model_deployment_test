@@ -1,88 +1,40 @@
 import streamlit as st
-import os
-import json
-from dotenv import load_dotenv
-# from IPython.display import Markdown, display, update_display
-# from scraper import fetch_website_links
-# from scraper import fetch_website_contents
 from openai import OpenAI
+from dotenv import load_dotenv
 
-# Initialize and constants
-
+# 1. Setup & Auth
 load_dotenv(override=True)
-# api_key = os.getenv('OPENAI_API_KEY')
+# Using st.secrets or environment variable
+api_key = st.secrets.get("OPENAI_API_KEY")
+client = OpenAI(api_key=api_key)
 
-api_key=st.secrets["OPENAI_API_KEY"]
+# 2. Prompts
+SYSTEM_PROMPT = "You are a snarky assistant that provides short, humorous summaries. Respond in markdown."
+USER_PROMPT_PREFIX = "Here is the user input. Provide a short, funny, snarky reply/answer: "
 
-if api_key and api_key.startswith('sk-proj-') and len(api_key)>10:
-    print("API key looks good so far")
-else:
-    print("There might be a problem with your API key? Please visit the troubleshooting notebook!")
-    
-MODEL = 'gpt-5-nano'
-# openai = OpenAI()
-
-openai = OpenAI()
-
-# response = openai.chat.completions.create(model="gpt-5-nano", messages=messages)
-# response.choices[0].message.content
-
-# Define our system prompt - you can experiment with this later, changing the last sentence to 'Respond in markdown in Spanish."
-
-system_prompt = """
-You are a snarky assistant that replies back to the user
-and provides a short, snarky, humorous summary, ignoring text that might be navigation related.
-Respond in markdown. Do not wrap the markdown in a code block - respond just with the markdown.
-"""
-
-# Define our user prompt
-
-user_prompt_prefix = """
-Here are the contents of the user input.
-Provide a short, funny, snarky reply to it.
-If it includes questions, then answer them too.
-
-"""
-
-# def messages_for(website):
-#     return [
-#         {"role": "system", "content": system_prompt},
-#         {"role": "user", "content": user_prompt_prefix + website}
-#     ]
-
-# And now: call the OpenAI API. You will get very familiar with this!
-
-def summarize(input):
-    # website = fetch_website_contents(url)
-    response = openai.chat.completions.create(
-        model = "gpt-4.1-mini",
-        # messages = messages_for(website),
-
+def summarize(user_input):
+    # Note: Use 'gpt-4o' or 'gpt-3.5-turbo' as current valid models
+    response = client.chat.completions.create(
+        model="gpt-4o", 
         messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt_prefix + str(input)}
-          ],
-        stream=True
-
-        
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": USER_PROMPT_PREFIX + str(user_input)}
+        ]
     )
     return response.choices[0].message.content
-    st.write_stream(stream)
 
+# 3. Streamlit UI
+st.title("Snarky Assistant")
 
-# Streamlit UI
-st.title("Funny Assistant")
+user_text = st.text_input("Enter your text/question here:")
 
-# Create input boxes for your function parameters
-# name = st.text_input("Enter Name of Company")
-link = st.text_input("Enter input here")
-
-# Add a button to trigger the function
 if st.button("Run Model"):
-    if link:
+    if user_text:
         with st.spinner("Processing..."):
-            # Call your function with the user inputs
-            result = summarize(input)
-            st.success(result)
+            try:
+                result = summarize(user_text)
+                st.markdown(result)
+            except Exception as e:
+                st.error(f"An error occurred: {e}")
     else:
-        st.warning("Please provide a link.")
+        st.warning("Please enter some text first.")
